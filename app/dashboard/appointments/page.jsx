@@ -99,6 +99,7 @@ export default function AppointmentsPage() {
               <th className="p-2 border">แพทย์</th>
               <th className="p-2 border">สถานะ</th>
               <th className="p-2 border">หมายเหตุ</th>
+              <th className="p-2 border">ตอบรับ</th>
               <th className="p-2 border">จัดการ</th>
             </tr>
           </thead>
