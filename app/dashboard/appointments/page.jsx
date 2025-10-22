@@ -376,9 +376,12 @@ function AppointmentRow({ appointment, userRole, onChange }) {
           )}
 
         {/* ถ้าเป็นผู้ป่วย → แสดง "รอการตอบรับจากหมอ" */}
-        {userRole === "patient" && appointment.status === "pending" && (
-          <span className="text-gray-500 text-sm">⌛ รอการตอบรับจากหมอ</span>
-        )}
+        {/* ถ้าไม่ใช่หมอ (เช่นผู้ป่วยหรือแอดมิน) → แสดงข้อความรอการตอบรับ */}
+        {userRole !== "doctor" &&
+          userRole !== 2 &&
+          appointment.status === "pending" && (
+            <span className="text-gray-500 text-sm">⌛ รอการตอบรับจากหมอ</span>
+          )}
 
         {appointment.status === "confirmed" && (
           <span className="text-green-700 text-sm">✔️ ยืนยันแล้ว</span>
