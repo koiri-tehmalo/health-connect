@@ -15,11 +15,9 @@ import {
   Bar,
 } from "recharts";
 
-/* ============================================================
-   🩺 หน้า: การติดตามสุขภาพผ่านอุปกรณ์สวมใส่
-============================================================ */
 export default function HealthTrackingPage() {
   const [records, setRecords] = useState([]);
+  const [user, setUser] = useState(null);
   const [form, setForm] = useState({
     pulse: "",
     systolic: "",
@@ -29,15 +27,28 @@ export default function HealthTrackingPage() {
     steps: "",
   });
   const [analyze, setAnalyze] = useState(null);
-  const [selectedRecord, setSelectedRecord] = useState(null); // ✅ สำหรับ modal
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   /* -----------------------------
-     📦 โหลดข้อมูลทั้งหมด
+     📌 โหลดข้อมูลผู้ใช้
+  ----------------------------- */
+  useEffect(() => {
+    async function getUser() {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user) setUser(data.user);
+    }
+    getUser();
+  }, []);
+
+  /* -----------------------------
+     📦 โหลดข้อมูลเฉพาะของ user นั้น
   ----------------------------- */
   async function loadRecords() {
+    if (!user) return;
     const { data, error } = await supabase
       .from("health_tracking")
       .select("*")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     if (!error) setRecords(data || []);
@@ -45,25 +56,22 @@ export default function HealthTrackingPage() {
 
   useEffect(() => {
     loadRecords();
-  }, []);
+  }, [user]);
 
   /* -----------------------------
-     🧠 ฟังก์ชันวิเคราะห์สุขภาพ
+     🧠 วิเคราะห์สุขภาพ
   ----------------------------- */
   function analyzeHealth(values) {
     const { pulse, systolic, diastolic, temperature, spo2 } = values;
     const results = [];
     let abnormal = 0;
 
-    // 💓 ชีพจร
-    if (pulse < 60)
-      results.push(`🟡 ชีพจร ${pulse} bpm → ต่ำ (หัวใจเต้นช้า)`);
+    if (pulse < 60) results.push(`🟡 ชีพจร ${pulse} bpm → ต่ำ (หัวใจเต้นช้า)`);
     else if (pulse > 100)
       results.push(`🔴 ชีพจร ${pulse} bpm → สูง (หัวใจเต้นเร็ว)`);
     else results.push(`🟢 ชีพจร ${pulse} bpm → ปกติ (60–100 bpm)`);
     if (pulse < 60 || pulse > 100) abnormal++;
 
-    // 🩸 ความดัน
     if (systolic > 140 || diastolic > 90)
       results.push(`🔴 ความดัน ${systolic}/${diastolic} → สูง`);
     else if (systolic < 90 || diastolic < 60)
@@ -72,7 +80,6 @@ export default function HealthTrackingPage() {
     if (systolic > 140 || diastolic > 90 || systolic < 90 || diastolic < 60)
       abnormal++;
 
-    // 🌡️ อุณหภูมิ
     if (temperature > 37.5)
       results.push(`🔴 อุณหภูมิ ${temperature}°C → สูง (อาจมีไข้)`);
     else if (temperature < 36.0)
@@ -80,13 +87,10 @@ export default function HealthTrackingPage() {
     else results.push(`🟢 อุณหภูมิ ${temperature}°C → ปกติ (36.0–37.5°C)`);
     if (temperature > 37.5 || temperature < 36.0) abnormal++;
 
-    // 🫁 SpO₂
-    if (spo2 < 95)
-      results.push(`🔴 ค่า SpO₂ ${spo2}% → ต่ำ (อาจขาดออกซิเจน)`);
+    if (spo2 < 95) results.push(`🔴 ค่า SpO₂ ${spo2}% → ต่ำ (อาจขาดออกซิเจน)`);
     else results.push(`🟢 ค่า SpO₂ ${spo2}% → ปกติ (≥95%)`);
     if (spo2 < 95) abnormal++;
 
-    // ✅ สรุปผลรวม
     let summary = "";
     if (abnormal === 0) summary = "✅ สุขภาพปกติ";
     else if (abnormal <= 2) summary = "⚠️ มีบางค่าผิดปกติ";
@@ -96,14 +100,17 @@ export default function HealthTrackingPage() {
   }
 
   /* -----------------------------
-     💾 บันทึกข้อมูล
+     💾 บันทึกข้อมูล (ของ user คนนั้น)
   ----------------------------- */
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!user) return alert("กรุณาเข้าสู่ระบบก่อน");
+
     const result = analyzeHealth(form);
     setAnalyze(result);
 
     const { error } = await supabase.from("health_tracking").insert({
+      user_id: user.id, // 👈 ผูกกับผู้ใช้
       pulse: Number(form.pulse),
       systolic: Number(form.systolic),
       diastolic: Number(form.diastolic),
@@ -246,7 +253,9 @@ export default function HealthTrackingPage() {
                 </td>
                 <td
                   className={`border p-2 text-center ${
-                    isAbnormal("pulse", r.pulse, r) ? "text-red-600 font-bold" : ""
+                    isAbnormal("pulse", r.pulse, r)
+                      ? "text-red-600 font-bold"
+                      : ""
                   }`}
                 >
                   {r.pulse}
@@ -271,7 +280,9 @@ export default function HealthTrackingPage() {
                 </td>
                 <td
                   className={`border p-2 text-center ${
-                    isAbnormal("spo2", r.spo2, r) ? "text-red-600 font-bold" : ""
+                    isAbnormal("spo2", r.spo2, r)
+                      ? "text-red-600 font-bold"
+                      : ""
                   }`}
                 >
                   {r.spo2}
@@ -358,9 +369,24 @@ export default function HealthTrackingPage() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="pulse" stroke="#4f46e5" name="ชีพจร (bpm)" />
-              <Line type="monotone" dataKey="systolic" stroke="#ef4444" name="ความดันบน" />
-              <Line type="monotone" dataKey="spo2" stroke="#10b981" name="SpO₂ (%)" />
+              <Line
+                type="monotone"
+                dataKey="pulse"
+                stroke="#4f46e5"
+                name="ชีพจร (bpm)"
+              />
+              <Line
+                type="monotone"
+                dataKey="systolic"
+                stroke="#ef4444"
+                name="ความดันบน"
+              />
+              <Line
+                type="monotone"
+                dataKey="spo2"
+                stroke="#10b981"
+                name="SpO₂ (%)"
+              />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -382,7 +408,12 @@ export default function HealthTrackingPage() {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="steps" fill="#3b82f6" name="จำนวนก้าว (steps)" barSize={40} />
+              <Bar
+                dataKey="steps"
+                fill="#3b82f6"
+                name="จำนวนก้าว (steps)"
+                barSize={40}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

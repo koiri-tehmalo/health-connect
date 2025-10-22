@@ -35,6 +35,7 @@ export default function EMRPage() {
         .from("view_doctor_patient_appointments")
         .select("patient_id, patient_name, status")
         .eq("doctor_id", user.id)
+        .eq("status", "confirmed") // ✅ ดึงเฉพาะสถานะ confirmed
         .neq("status", "cancelled");
 
       // ✅ รวมชื่อไม่ซ้ำจาก view (ไม่กรองออกผู้ป่วยเดิม)
@@ -110,6 +111,7 @@ export default function EMRPage() {
     const diagnosis = e.target.diagnosis.value;
     const notes = e.target.notes.value;
 
+    // ✅ บันทึกเวชระเบียนใหม่
     const { error } = await supabase.from("medical_records").insert({
       doctor_id: user.id,
       patient_id: patientId,
@@ -119,7 +121,15 @@ export default function EMRPage() {
     });
 
     if (!error) {
-      alert("✅ บันทึกเวชระเบียนสำเร็จ");
+      // ✅ อัปเดตสถานะนัดเป็น "completed"
+      await supabase
+        .from("appointments")
+        .update({ status: "completed" })
+        .eq("doctor_id", user.id)
+        .eq("patient_id", patientId)
+        .eq("status", "confirmed"); // ป้องกันการเปลี่ยนของนัดที่ยังไม่ยืนยัน
+
+      alert("✅ บันทึกเวชระเบียนและอัปเดตสถานะนัดเป็น 'ตรวจเสร็จแล้ว'");
       fetchData();
       e.target.reset();
       setFileList([]);

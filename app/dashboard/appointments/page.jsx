@@ -389,6 +389,9 @@ function AppointmentRow({ appointment, userRole, onChange }) {
         {appointment.status === "cancelled" && (
           <span className="text-red-500 text-sm">❌ ถูกยกเลิก</span>
         )}
+        {appointment.status === "completed" && (
+          <span className="text-blue-700 text-sm">🏥 เสร็จสิ้น</span>
+        )}
       </td>
       <td className="border p-2 text-center space-x-1">
         {editing ? (
