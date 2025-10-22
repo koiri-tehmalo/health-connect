@@ -8,6 +8,7 @@ const links = [
   { href: "/dashboard/appointments", label: "Appointments" },
   { href: "/dashboard/emr", label: "EMR" },
   { href: "/dashboard/prescriptions", label: "Prescriptions" },
+  { href: "/dashboard/HealthTracking", label: "HealthTracking" },
   /*{ href: "/dashboard/reminders", label: "Medication" },
   { href: "/dashboard/wearables", label: "Wearables" },
   { href: "/dashboard/analytics", label: "AI Analytics" },*/
