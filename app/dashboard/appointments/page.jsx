@@ -52,11 +52,11 @@ export default function AppointmentsPage() {
     const roleId = roleData?.role_id;
 
     let query = supabase
-      .from("view_appointments_detail") // ตาราง view รวมข้อมูลนัด (หรือ appointments ก็ได้)
+      .from("view_appointments_detail")
       .select(
         "id, appt_time, status, notes, doctor_name, patient_id, doctor_id, patient_name"
       )
-      .order("appt_time", { ascending: true });
+      .order("appt_time", { ascending: false }); // 🔥 เรียงจากล่าสุดก่อน
 
     // 🔹 เงื่อนไขตาม role
     if (roleId === 1) {

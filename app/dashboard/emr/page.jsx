@@ -175,6 +175,8 @@ export default function EMRPage() {
 
       {loading ? (
         <div>⏳ กำลังโหลด...</div>
+      ) : !records || records.length === 0 ? (
+        <div className="text-gray-500">ไม่มีข้อมูลเวชระเบียน</div>
       ) : (
         <table className="w-full border text-sm">
           <thead className="bg-gray-100">
