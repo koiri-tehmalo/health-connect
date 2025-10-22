@@ -2,27 +2,18 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import dayjs from "dayjs";
-import {
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
+import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from "recharts";
 
 export default function DashboardHome() {
   const [user, setUser] = useState(null);
   const [healthStats, setHealthStats] = useState([]);
+  const [appointments, setAppointments] = useState([]); // ✅ เพิ่มนัดหมาย
+
+  const [prescriptions, setPrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   /* ------------------------------
-     ✅ โหลดข้อมูลผู้ใช้ + สุขภาพ (ของใครของมัน)
+     ✅ โหลดข้อมูลผู้ใช้ + สุขภาพ + ยาที่ถูกสั่ง
   ------------------------------ */
   useEffect(() => {
     async function loadData() {
@@ -45,8 +36,8 @@ export default function DashboardHome() {
 
       setUser(profile);
 
-      // ✅ ดึงข้อมูลสุขภาพเฉพาะของ user คนนั้น
-      const { data: records, error } = await supabase
+      // ✅ ดึงข้อมูลสุขภาพ
+      const { data: records } = await supabase
         .from("health_tracking")
         .select(
           "created_at, pulse, systolic, diastolic, spo2, temperature, summary"
@@ -55,8 +46,34 @@ export default function DashboardHome() {
         .order("created_at", { ascending: true })
         .limit(10);
 
-      if (error) console.error("โหลดข้อมูลสุขภาพผิดพลาด:", error.message);
       setHealthStats(records || []);
+
+      // ✅ ดึงข้อมูลยาที่สั่งให้คนนี้กิน
+      const { data: meds } = await supabase
+        .from("prescriptions")
+        .select(
+          "id, medication_name, dosage, instructions, prescribed_at, doctors:doctor_id(full_name)"
+        )
+        .eq("patient_id", user.id)
+        .order("prescribed_at", { ascending: false })
+        .limit(5); // เอามาแค่ล่าสุด 5 รายการ
+
+      setPrescriptions(meds || []);
+      // ✅ ข้อมูลนัดหมายภายใน 3 วัน
+      const today = dayjs().startOf("day").toISOString();
+      const threeDaysLater = dayjs().add(3, "day").endOf("day").toISOString();
+
+      const { data: appts, error } = await supabase
+        .from("appointments")
+        .select("id, appt_time, doctor_id, notes, doctors:doctor_id(full_name)")
+        .eq("patient_id", user.id)
+        .gte("appt_time", today)
+        .lte("appt_time", threeDaysLater)
+        .order("appt_time", { ascending: true })
+        .limit(3);
+
+      if (error) console.error("โหลดนัดหมายผิดพลาด:", error.message);
+      setAppointments(appts || []);
       setLoading(false);
     }
 
@@ -73,12 +90,10 @@ export default function DashboardHome() {
           healthStats.length
         ).toFixed(1)
       : 0;
-
   const avgPulse = avg("pulse");
   const avgSystolic = avg("systolic");
   const avgSpO2 = avg("spo2");
   const avgTemp = avg("temperature");
-
   const abnormalCount = healthStats.filter(
     (r) => r.summary && !r.summary.includes("ปกติ")
   ).length;
@@ -94,7 +109,7 @@ export default function DashboardHome() {
 
   const summaryColor =
     healthStats.length === 0
-      ? "#9CA3AF" // เทา
+      ? "#9CA3AF"
       : abnormalCount === 0
       ? "#10B981"
       : abnormalCount < 3
@@ -116,7 +131,6 @@ export default function DashboardHome() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">👤 โปรไฟล์ผู้ใช้ & สรุปสุขภาพ</h1>
-
       {/* ✅ โปรไฟล์ */}
       {user && (
         <div className="bg-white/80 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md p-6 flex flex-col sm:flex-row gap-6 items-center backdrop-blur-md">
@@ -148,15 +162,10 @@ export default function DashboardHome() {
           </div>
         </div>
       )}
-
       {/* ✅ วงกลมสรุปสุขภาพ */}
       <div className="card flex flex-col md:flex-row items-center justify-center gap-8 p-6">
         {loading ? (
           <p className="text-gray-500 text-center">กำลังโหลดข้อมูล...</p>
-        ) : healthStats.length === 0 ? (
-          <p className="text-gray-500 text-center">
-            📭 ยังไม่มีข้อมูลสุขภาพ กรุณาบันทึกข้อมูลในเมนู Health Tracking
-          </p>
         ) : (
           <>
             <div className="text-center space-y-3">
@@ -179,7 +188,6 @@ export default function DashboardHome() {
                   cy="50%"
                   innerRadius={60}
                   outerRadius={100}
-                  fill="#8884d8"
                   label
                 >
                   {pieData.map((entry, index) => (
@@ -195,83 +203,115 @@ export default function DashboardHome() {
           </>
         )}
       </div>
-
-      {/* ✅ กราฟแนวโน้มสุขภาพ */}
+      {/* ✅ รายการยาที่ถูกสั่งให้กิน */}
       <div className="card p-6">
         <h2 className="text-lg font-semibold mb-3">
-          📈 กราฟแนวโน้มสุขภาพล่าสุด
+          💊 ยาที่ถูกสั่งให้กินล่าสุด
         </h2>
         {loading ? (
           <p className="text-gray-500 text-center">⏳ กำลังโหลดข้อมูล...</p>
-        ) : healthStats.length === 0 ? (
+        ) : prescriptions.length === 0 ? (
           <p className="text-gray-500 text-center">
-            📊 ยังไม่มีข้อมูลสำหรับแสดงกราฟ
+            🩺 ยังไม่มีข้อมูลใบสั่งยาจากแพทย์
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={healthStats}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="created_at"
-                tickFormatter={(v) => dayjs(v).format("DD/MM")}
-              />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="pulse"
-                stroke="#3b82f6"
-                name="ชีพจร (bpm)"
-              />
-              <Line
-                type="monotone"
-                dataKey="systolic"
-                stroke="#ef4444"
-                name="ความดันบน"
-              />
-              <Line
-                type="monotone"
-                dataKey="spo2"
-                stroke="#10b981"
-                name="SpO₂ (%)"
-              />
-              <Line
-                type="monotone"
-                dataKey="temperature"
-                stroke="#f59e0b"
-                name="อุณหภูมิ (°C)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <table className="w-full border text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-2 border">วันที่สั่ง</th>
+                <th className="p-2 border">ชื่อยา</th>
+                <th className="p-2 border">ขนาดยา</th>
+                <th className="p-2 border">คำแนะนำ</th>
+                <th className="p-2 border">แพทย์ผู้สั่ง</th>
+              </tr>
+            </thead>
+            <tbody>
+              {prescriptions.map((p) => (
+                <tr key={p.id}>
+                  <td className="p-2 border">
+                    {dayjs(p.prescribed_at).format("DD/MM/YYYY")}
+                  </td>
+                  <td className="p-2 border">{p.medication_name}</td>
+                  <td className="p-2 border">{p.dosage}</td>
+                  <td className="p-2 border">{p.instructions || "-"}</td>
+                  <td className="p-2 border">{p.doctors?.full_name || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
-
-      {/* ✅ ค่าเฉลี่ย */}
+      {/* ✅ นัดหมายภายใน 3 วัน */}
+      <div className="card p-6">
+        <h2 className="text-lg font-semibold mb-3">
+          📅 นัดหมายแพทย์ใน 3 วันข้างหน้า
+        </h2>
+        {loading ? (
+          <p className="text-gray-500 text-center">⏳ กำลังโหลดข้อมูล...</p>
+        ) : appointments.length === 0 ? (
+          <p className="text-gray-500 text-center">
+            📭 ยังไม่มีนัดหมายภายใน 3 วันข้างหน้า
+          </p>
+        ) : (
+          <table className="w-full border text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-2 border">วันที่</th>
+                <th className="p-2 border">เวลา</th>
+                <th className="p-2 border">แพทย์</th>
+                <th className="p-2 border">หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {appointments.map((a) => (
+                <tr key={a.id}>
+                  <td className="p-2 border">
+                    {dayjs(a.appointment_time).format("DD/MM/YYYY")}
+                  </td>
+                  <td className="p-2 border">
+                    {dayjs(a.appointment_time).format("HH:mm")}
+                  </td>
+                  <td className="p-2 border">{a.doctors?.full_name || "-"}</td>
+                  <td className="p-2 border">{a.notes || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {/* ✅ ค่าเฉลี่ย */}{" "}
       <div className="card p-6 grid sm:grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        {" "}
         {healthStats.length === 0 ? (
           <p className="col-span-full text-gray-500 text-center">
-            📉 ยังไม่มีข้อมูลสำหรับคำนวณค่าเฉลี่ย
+            {" "}
+            📉 ยังไม่มีข้อมูลสำหรับคำนวณค่าเฉลี่ย{" "}
           </p>
         ) : (
           <>
+            {" "}
             <div>
-              <h3 className="text-gray-500 text-sm">ชีพจรเฉลี่ย</h3>
-              <p className="text-xl font-semibold">{avgPulse} bpm</p>
-            </div>
+              {" "}
+              <h3 className="text-gray-500 text-sm">ชีพจรเฉลี่ย</h3>{" "}
+              <p className="text-xl font-semibold">{avgPulse} bpm</p>{" "}
+            </div>{" "}
             <div>
-              <h3 className="text-gray-500 text-sm">ความดันเฉลี่ย</h3>
-              <p className="text-xl font-semibold">{avgSystolic} mmHg</p>
-            </div>
+              {" "}
+              <h3 className="text-gray-500 text-sm">ความดันเฉลี่ย</h3>{" "}
+              <p className="text-xl font-semibold">{avgSystolic} mmHg</p>{" "}
+            </div>{" "}
             <div>
-              <h3 className="text-gray-500 text-sm">SpO₂ เฉลี่ย</h3>
-              <p className="text-xl font-semibold">{avgSpO2}%</p>
-            </div>
+              {" "}
+              <h3 className="text-gray-500 text-sm">SpO₂ เฉลี่ย</h3>{" "}
+              <p className="text-xl font-semibold">{avgSpO2}%</p>{" "}
+            </div>{" "}
             <div>
-              <h3 className="text-gray-500 text-sm">อุณหภูมิเฉลี่ย</h3>
-              <p className="text-xl font-semibold">{avgTemp} °C</p>
-            </div>
+              {" "}
+              <h3 className="text-gray-500 text-sm">อุณหภูมิเฉลี่ย</h3>{" "}
+              <p className="text-xl font-semibold">{avgTemp} °C</p>{" "}
+            </div>{" "}
           </>
-        )}
+        )}{" "}
       </div>
     </div>
   );
