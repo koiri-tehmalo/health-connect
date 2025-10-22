@@ -97,6 +97,7 @@ export default function AppointmentsPage() {
             <tr>
               <th className="p-2 border">วันเวลา</th>
               <th className="p-2 border">แพทย์</th>
+              <th className="p-2 border">ผู้ป่วย</th> {/* ✅ เพิ่ม */}
               <th className="p-2 border">สถานะ</th>
               <th className="p-2 border">หมายเหตุ</th>
               <th className="p-2 border">ตอบรับ</th>
@@ -123,6 +124,8 @@ export default function AppointmentsPage() {
    เพิ่มนัดหมายใหม่
 ----------------------------------- */
 function NewAppointment({ onAdd }) {
+  const [hospitalList, setHospitalList] = useState([]);
+  const [selectedHospital, setSelectedHospital] = useState("");
   const [doctorList, setDoctorList] = useState([]);
   const [doctorId, setDoctorId] = useState("");
   const [time, setTime] = useState("");
@@ -130,17 +133,41 @@ function NewAppointment({ onAdd }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
+  // 🔹 โหลดรายชื่อโรงพยาบาลตอนเริ่มต้น
   useEffect(() => {
-    async function fetchDoctors() {
+    async function fetchHospitals() {
+      const { data, error } = await supabase
+        .from("hospitals")
+        .select("id, name")
+        .order("name");
+      if (!error) setHospitalList(data || []);
+    }
+    fetchHospitals();
+  }, []);
+
+  // 🔹 โหลดรายชื่อแพทย์ตามโรงพยาบาลที่เลือก
+  useEffect(() => {
+    async function fetchDoctorsByHospital() {
+      if (!selectedHospital) {
+        setDoctorList([]);
+        setDoctorId("");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("users")
         .select("id, full_name")
-        .eq("role_id", [2]); // role_id=2 -> doctor ใช้ eq แทน in
+        .eq("hospital_id", selectedHospital)
+        .eq("role_id", 2)
+        .order("full_name");
+
       if (!error) setDoctorList(data || []);
     }
-    fetchDoctors();
-  }, []);
 
+    fetchDoctorsByHospital();
+  }, [selectedHospital]);
+
+  // 🔹 เมื่อ submit ฟอร์ม
   async function submit(e) {
     e.preventDefault();
     setSaving(true);
@@ -154,6 +181,7 @@ function NewAppointment({ onAdd }) {
       setSaving(false);
       return;
     }
+
     const { data: profile } = await supabase
       .from("users")
       .select("role_id")
@@ -163,6 +191,8 @@ function NewAppointment({ onAdd }) {
     const { error } = await supabase.from("appointments").insert({
       patient_id: user.id,
       doctor_id: doctorId,
+      hospital_id: selectedHospital, // ✅ เพิ่มตรงนี้
+
       appt_time: time,
       notes,
     });
@@ -170,6 +200,8 @@ function NewAppointment({ onAdd }) {
     if (error) setMsg("❌ " + error.message);
     else {
       setMsg("✅ เพิ่มนัดหมายสำเร็จ!");
+      setSelectedHospital("");
+      setDoctorList([]);
       setDoctorId("");
       setTime("");
       setNotes("");
@@ -183,12 +215,32 @@ function NewAppointment({ onAdd }) {
     <form onSubmit={submit} className="card space-y-3 max-w-md">
       <h2 className="text-lg font-semibold">เพิ่มนัดหมายใหม่</h2>
 
+      {/* 🔹 เลือกโรงพยาบาล */}
+      <div>
+        <label className="label">เลือกโรงพยาบาล</label>
+        <select
+          className="input"
+          value={selectedHospital}
+          onChange={(e) => setSelectedHospital(e.target.value)}
+          required
+        >
+          <option value="">-- เลือกโรงพยาบาล --</option>
+          {hospitalList.map((hosp) => (
+            <option key={hosp.id} value={hosp.id}>
+              {hosp.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* 🔹 เลือกแพทย์ */}
       <div>
         <label className="label">เลือกแพทย์</label>
         <select
           className="input"
           value={doctorId}
           onChange={(e) => setDoctorId(e.target.value)}
+          disabled={!selectedHospital}
           required
         >
           <option value="">-- เลือกแพทย์ --</option>
@@ -200,6 +252,7 @@ function NewAppointment({ onAdd }) {
         </select>
       </div>
 
+      {/* 🔹 วันเวลา */}
       <div>
         <label className="label">วันเวลา</label>
         <input
@@ -211,6 +264,7 @@ function NewAppointment({ onAdd }) {
         />
       </div>
 
+      {/* 🔹 หมายเหตุ */}
       <div>
         <label className="label">หมายเหตุ</label>
         <textarea
@@ -272,17 +326,19 @@ function AppointmentRow({ appointment, userRole, onChange }) {
         {editing ? (
           <input
             type="datetime-local"
-            value={dayjs(time).format("YYYY-MM-DDTHH:mm")}
+            value={dayjs(time || new Date()).format("YYYY-MM-DDTHH:mm")}
             onChange={(e) => setTime(e.target.value)}
             className="input"
           />
-        ) : (
+        ) : appointment.appt_time ? (
           dayjs(appointment.appt_time).format("YYYY-MM-DD HH:mm")
+        ) : (
+          "-"
         )}
       </td>
-
       <td className="border p-2">{appointment.doctor_name || "—"}</td>
-
+      <td className="border p-2">{appointment.patient_name || "—"}</td>{" "}
+      {/* ✅ เพิ่ม */}
       <td className="border p-2">
         <span
           className={
@@ -296,7 +352,6 @@ function AppointmentRow({ appointment, userRole, onChange }) {
           {appointment.status}
         </span>
       </td>
-
       <td className="border p-2">
         {editing ? (
           <input
@@ -320,22 +375,9 @@ function AppointmentRow({ appointment, userRole, onChange }) {
             </button>
           )}
 
-        {/* ถ้าเป็นผู้ป่วย → แสดงปุ่มแก้ไข/ยกเลิก */}
+        {/* ถ้าเป็นผู้ป่วย → แสดง "รอการตอบรับจากหมอ" */}
         {userRole === "patient" && appointment.status === "pending" && (
-          <>
-            <button
-              onClick={() => setEditing(true)}
-              className="btn border px-3 py-1 text-xs"
-            >
-              ✏️ แก้ไข
-            </button>
-            <button
-              onClick={cancelAppointment}
-              className="btn border px-3 py-1 text-xs text-red-600"
-            >
-              🗑️ ยกเลิกนัด
-            </button>
-          </>
+          <span className="text-gray-500 text-sm">⌛ รอการตอบรับจากหมอ</span>
         )}
 
         {appointment.status === "confirmed" && (

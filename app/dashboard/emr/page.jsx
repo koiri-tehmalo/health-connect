@@ -8,7 +8,7 @@ export default function EMRPage() {
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fileList, setFileList] = useState([]);
-  const [patients, setPatients] = useState([]); // ✅ รายชื่อผู้ป่วยที่นัดกับหมอ
+  const [patients, setPatients] = useState([]);
 
   // -----------------------------
   // โหลดข้อมูลทั้งหมด
@@ -19,7 +19,7 @@ export default function EMRPage() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // ✅ ตรวจสอบ role ของผู้ใช้
+    // ✅ ดึง role ของผู้ใช้
     const { data: roleData } = await supabase
       .from("users")
       .select("role_id")
@@ -29,47 +29,44 @@ export default function EMRPage() {
     const roleId = roleData?.role_id;
     setUserRole(roleId);
 
+    // ✅ ถ้าเป็นหมอ → ดึงรายชื่อผู้ป่วยที่นัดกับหมอจาก view
     if (roleId === 2) {
-      // ✅ ดึงรายชื่อผู้ป่วยทั้งหมดที่นัดกับหมอ
       const { data: appointments } = await supabase
-        .from("appointments")
-        .select("patient_id, patients:patient_id (id, full_name)")
+        .from("view_doctor_patient_appointments")
+        .select("patient_id, patient_name, status")
         .eq("doctor_id", user.id)
         .neq("status", "cancelled");
 
-      // ✅ ดึงรายชื่อผู้ป่วยที่ "เคยมีเวชระเบียนแล้ว"
-      const { data: existingRecords } = await supabase
-        .from("medical_records")
-        .select("patient_id")
-        .eq("doctor_id", user.id);
-
-      const alreadyAdded = new Set(
-        (existingRecords || []).map((r) => r.patient_id)
-      );
-
-      // ✅ กรองเอาเฉพาะผู้ป่วยที่ยังไม่มีเวชระเบียน
-      const filteredPatients =
-        appointments?.filter((a) => !alreadyAdded.has(a.patient_id)) || [];
-
-      // ✅ รวมชื่อไม่ซ้ำ
+      // ✅ รวมชื่อไม่ซ้ำจาก view (ไม่กรองออกผู้ป่วยเดิม)
       const uniquePatients = [];
       const seen = new Set();
-      for (const a of filteredPatients) {
-        const p = a.patients;
-        if (p && !seen.has(p.id)) {
-          seen.add(p.id);
-          uniquePatients.push(p);
+      for (const a of appointments || []) {
+        if (a.patient_id && !seen.has(a.patient_id)) {
+          seen.add(a.patient_id);
+          uniquePatients.push({
+            id: a.patient_id,
+            full_name: a.patient_name,
+          });
         }
       }
-
       setPatients(uniquePatients);
     }
 
-    // ✅ ดึงเวชระเบียนตาม role
+    // ✅ ดึงเวชระเบียนทั้งหมด (join ด้วย foreign key เดิม)
     let query = supabase
       .from("medical_records")
       .select(
-        "id, patient_id, doctor_id, visit_date, diagnosis, notes, attachments, patients:patient_id (id, full_name), doctors:doctor_id (id, full_name)"
+        `
+        id,
+        patient_id,
+        doctor_id,
+        visit_date,
+        diagnosis,
+        notes,
+        attachments,
+        patients:patient_id (id, full_name),
+        doctors:doctor_id (id, full_name)
+      `
       )
       .order("visit_date", { ascending: false });
 
@@ -220,7 +217,6 @@ export default function EMRPage() {
                       ))
                     : "-"}
                 </td>
-
                 {userRole === 2 && (
                   <td className="p-2 border text-center">
                     <button
