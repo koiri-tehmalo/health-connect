@@ -23,16 +23,27 @@ export default function SignupPage() {
       <form onSubmit={submit} className="space-y-3">
         <div>
           <label className="label">อีเมล</label>
-          <input className="input" value={email} onChange={e=>setEmail(e.target.value)} />
+          <input
+            className="input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
         <div>
           <label className="label">รหัสผ่าน</label>
-          <input type="password" className="input" value={password} onChange={e=>setPassword(e.target.value)} />
+          <input
+            type="password"
+            className="input"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         {err && <div className="text-red-600 text-sm">{err}</div>}
         <button className="btn btn-primary w-full">สมัครสมาชิก</button>
       </form>
-      <p className="mt-4 text-sm">มีบัญชีแล้ว? <a href="/login">เข้าสู่ระบบ</a></p>
+      <p className="mt-4 text-sm">
+        มีบัญชีแล้ว? <a href="/login">เข้าสู่ระบบ</a>
+      </p>
     </div>
   );
 }
