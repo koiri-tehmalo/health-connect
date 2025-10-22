@@ -202,7 +202,7 @@ export default function Nav() {
                 className={`px-3 py-2 rounded-md text-sm font-medium border transition-all ${
                   pathname === l.href
                     ? "bg-gradient-to-r from-sky-500 to-emerald-400 text-white"
-                    : "border-gray-400 hover:animate-gradientMove hover:bg-[length:200%_200%] hover:bg-gradient-to-r hover:from-sky-400 hover:via-emerald-400 hover:to-sky-500 text-gray-700 dark:text-gray-300"
+                    : "text-sky-500 dark:text-sky-400 border border-gray-300 dark:border-gray-600 hover:animate-gradientMove hover:bg-[length:200%_200%] hover:bg-gradient-to-r hover:from-sky-400 hover:via-emerald-400 hover:to-sky-500 hover:text-white"
                 }`}
               >
                 {l.label}
