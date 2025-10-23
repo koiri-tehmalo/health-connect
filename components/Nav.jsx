@@ -59,7 +59,9 @@ export default function Nav() {
   // ✅ โหลดข้อมูลผู้ใช้
   useEffect(() => {
     async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
       const { data: profile } = await supabase
         .from("users")
@@ -70,6 +72,7 @@ export default function Nav() {
         email: user.email,
         name: profile?.full_name || "ผู้ใช้ระบบ",
         avatar: profile?.avatar_url || null,
+        role_id: profile?.role_id || 1, // ✅ เพิ่ม role_id
       });
     }
     fetchUser();
@@ -88,90 +91,90 @@ export default function Nav() {
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between p-3">
         {/* โลโก้ */}
-      <Link
-  href="/dashboard"
-  className="flex items-center gap-3 group transition-all hover:opacity-90"
->
-  <div className="relative w-20 h-20 overflow-visible transition-all duration-300 group-hover:scale-105">
-    <img
-      src="/health.png"   // ✅ ใช้โลโก้ .png พื้นหลังโปร่งใส
-      alt="HealthConnect Logo"
-      className="object-contain w-full h-full"
-    />
-  </div>
-  <div className="flex flex-col leading-tight">
-    <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-lg tracking-wide">
-      Health
-    </span>
-    <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#00C6A7] to-[#007BFF] text-lg tracking-wide">
-      Connect
-    </span>
-  </div>
-</Link>
-
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 group transition-all hover:opacity-90"
+        >
+          <div className="relative w-20 h-20 overflow-visible transition-all duration-300 group-hover:scale-105">
+            <img
+              src="/health.png" // ✅ ใช้โลโก้ .png พื้นหลังโปร่งใส
+              alt="HealthConnect Logo"
+              className="object-contain w-full h-full"
+            />
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-lg tracking-wide">
+              Health
+            </span>
+            <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#00C6A7] to-[#007BFF] text-lg tracking-wide">
+              Connect
+            </span>
+          </div>
+        </Link>
 
         {/* 📱 ปุ่มมือถือ */}
         <div className="flex items-center gap-3 md:hidden">
           {/* 🔔 แจ้งเตือน (mobile) */}
-<div className="relative" ref={notifRef}>
-  <button
-    onClick={() => {
-      setNotifOpen(!notifOpen);
-      setDropdownOpen(false);
-    }}
-    className="relative w-9 h-9 flex items-center justify-center rounded-md
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => {
+                setNotifOpen(!notifOpen);
+                setDropdownOpen(false);
+              }}
+              className="relative w-9 h-9 flex items-center justify-center rounded-md
                border border-[#00C6A7]/50 text-[#007BFF] hover:text-[#00C6A7]
                bg-white/40 backdrop-blur-md hover:bg-white transition-all"
-  >
-    <Bell size={18} />
-    {unreadCount > 0 && (
-      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-        {unreadCount}
-      </span>
-    )}
-  </button>
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
 
-  {/* กล่องแจ้งเตือนมือถือ */}
-  {notifOpen && (
-    <div className="absolute right-0 top-full mt-2 w-72 rounded-xl bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg animate-slideDown z-50">
-      <div className="p-4">
-        <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
-          <span className="text-sm font-semibold text-gray-700">
-            การแจ้งเตือน
-          </span>
-          <button
-            onClick={() => setUnreadCount(0)}
-            className="text-xs text-[#007BFF] hover:text-[#00C6A7]"
-          >
-            ทำเครื่องหมายว่าอ่านแล้ว
-          </button>
-        </div>
-        {alerts.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-3">
-            ไม่มีการแจ้งเตือน
-          </p>
-        ) : (
-          <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100">
-            {alerts.map((a) => (
-              <li
-                key={a.id}
-                className={`p-2 text-sm ${
-                  a.is_read ? "text-gray-500 bg-white" : "bg-[#E8F6F3] text-gray-800"
-                }`}
-              >
-                <div className="font-medium">{a.message}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {dayjs(a.created_at).format("DD MMM YYYY HH:mm")}
+            {/* กล่องแจ้งเตือนมือถือ */}
+            {notifOpen && (
+              <div className="absolute right-0 top-full mt-2 w-72 rounded-xl bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg animate-slideDown z-50">
+                <div className="p-4">
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
+                    <span className="text-sm font-semibold text-gray-700">
+                      การแจ้งเตือน
+                    </span>
+                    <button
+                      onClick={() => setUnreadCount(0)}
+                      className="text-xs text-[#007BFF] hover:text-[#00C6A7]"
+                    >
+                      ทำเครื่องหมายว่าอ่านแล้ว
+                    </button>
+                  </div>
+                  {alerts.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center py-3">
+                      ไม่มีการแจ้งเตือน
+                    </p>
+                  ) : (
+                    <ul className="max-h-64 overflow-y-auto divide-y divide-gray-100">
+                      {alerts.map((a) => (
+                        <li
+                          key={a.id}
+                          className={`p-2 text-sm ${
+                            a.is_read
+                              ? "text-gray-500 bg-white"
+                              : "bg-[#E8F6F3] text-gray-800"
+                          }`}
+                        >
+                          <div className="font-medium">{a.message}</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {dayjs(a.created_at).format("DD MMM YYYY HH:mm")}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  )}
-</div>
-
+              </div>
+            )}
+          </div>
 
           {/* 👤 โปรไฟล์ (mobile) */}
           <div className="relative" ref={dropdownRef}>
@@ -184,7 +187,11 @@ export default function Nav() {
                          border border-[#00C6A7]/40 bg-white/60 backdrop-blur-lg text-gray-800 hover:bg-white transition-all"
             >
               {user?.avatar ? (
-                <img src={user.avatar} alt="avatar" className="w-full h-full rounded-full object-cover" />
+                <img
+                  src={user.avatar}
+                  alt="avatar"
+                  className="w-full h-full rounded-full object-cover"
+                />
               ) : (
                 <User size={18} />
               )}
@@ -192,26 +199,27 @@ export default function Nav() {
 
             {/* กล่องโปรไฟล์มือถือ */}
             {dropdownOpen && (
-  <div className="absolute right-0 top-full mt-2 w-52 rounded-lg bg-white/95 backdrop-blur-lg shadow-lg border border-gray-200 p-3 space-y-2 animate-slideDown z-50">
-    <div className="text-center border-b border-gray-200 pb-2">
-      <p className="text-xs text-gray-600 truncate">{user?.email}</p>
-    </div>
-    <Link
-      href="/dashboard/profile"
-      onClick={() => setDropdownOpen(false)}
-      className="flex items-center gap-2 text-gray-600 hover:text-[#007BFF] text-sm transition-all"
-    >
-      <Settings size={16} /> แก้ไขข้อมูลส่วนตัว
-    </Link>
-    <button
-      onClick={signOut}
-      className="flex items-center gap-2 text-red-500 hover:text-red-600 text-sm transition-all"
-    >
-      <LogOut size={16} /> ออกจากระบบ
-    </button>
-  </div>
-)}
-
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-lg bg-white/95 backdrop-blur-lg shadow-lg border border-gray-200 p-3 space-y-2 animate-slideDown z-50">
+                <div className="text-center border-b border-gray-200 pb-2">
+                  <p className="text-xs text-gray-600 truncate">
+                    {user?.email}
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2 text-gray-600 hover:text-[#007BFF] text-sm transition-all"
+                >
+                  <Settings size={16} /> แก้ไขข้อมูลส่วนตัว
+                </Link>
+                <button
+                  onClick={signOut}
+                  className="flex items-center gap-2 text-red-500 hover:text-red-600 text-sm transition-all"
+                >
+                  <LogOut size={16} /> ออกจากระบบ
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ☰ เมนู */}
@@ -225,80 +233,85 @@ export default function Nav() {
 
         {/* 💻 เมนู Desktop */}
         <div className="hidden md:flex items-center gap-3">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-300 ${
-                pathname === l.href
-                  ? "bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-white shadow-sm"
-                  : "text-[#007BFF] hover:text-[#00C6A7]"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
-
-         {/* 🔔 แจ้งเตือน (desktop) */}
-<div className="relative" ref={notifRef}>
-  <button
-    onClick={() => {
-      setNotifOpen(!notifOpen);
-      setDropdownOpen(false);
-    }}
-    className="relative w-9 h-9 flex items-center justify-center rounded-md
-               border border-[#00C6A7]/50 text-[#007BFF] hover:text-[#00C6A7]
-               bg-white/40 backdrop-blur-md hover:bg-white transition-all"
-  >
-    <Bell size={18} />
-    {unreadCount > 0 && (
-      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-        {unreadCount}
-      </span>
-    )}
-  </button>
-
-  {notifOpen && (
-    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg animate-slideDown z-50">
-      <div className="p-4">
-        <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
-          <span className="text-sm font-semibold text-gray-700">
-            การแจ้งเตือน
-          </span>
-          <button
-            onClick={() => setUnreadCount(0)}
-            className="text-xs text-[#007BFF] hover:text-[#00C6A7]"
-          >
-            ทำเครื่องหมายว่าอ่านแล้ว
-          </button>
-        </div>
-
-        {alerts.length === 0 ? (
-          <p className="text-gray-500 text-sm text-center py-3">
-            ไม่มีการแจ้งเตือน
-          </p>
-        ) : (
-          <ul className="max-h-72 overflow-y-auto divide-y divide-gray-100">
-            {alerts.map((a) => (
-              <li
-                key={a.id}
-                className={`p-2 text-sm ${
-                  a.is_read ? "text-gray-500 bg-white" : "bg-[#E8F6F3] text-gray-800"
+          {links
+            .filter(
+              (l) => !(l.href === "/dashboard/admin" && user?.role_id !== 3)
+            ) // ✅ ซ่อน Admin ถ้าไม่ใช่ role_id=3
+            .map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-300 ${
+                  pathname === l.href
+                    ? "bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-white shadow-sm"
+                    : "text-[#007BFF] hover:text-[#00C6A7]"
                 }`}
               >
-                <div className="font-medium">{a.message}</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {dayjs(a.created_at).format("DD MMM YYYY HH:mm")}
-                </div>
-              </li>
+                {l.label}
+              </Link>
             ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  )}
-</div>
 
+          {/* 🔔 แจ้งเตือน (desktop) */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => {
+                setNotifOpen(!notifOpen);
+                setDropdownOpen(false);
+              }}
+              className="relative w-9 h-9 flex items-center justify-center rounded-md
+               border border-[#00C6A7]/50 text-[#007BFF] hover:text-[#00C6A7]
+               bg-white/40 backdrop-blur-md hover:bg-white transition-all"
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg animate-slideDown z-50">
+                <div className="p-4">
+                  <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
+                    <span className="text-sm font-semibold text-gray-700">
+                      การแจ้งเตือน
+                    </span>
+                    <button
+                      onClick={() => setUnreadCount(0)}
+                      className="text-xs text-[#007BFF] hover:text-[#00C6A7]"
+                    >
+                      ทำเครื่องหมายว่าอ่านแล้ว
+                    </button>
+                  </div>
+
+                  {alerts.length === 0 ? (
+                    <p className="text-gray-500 text-sm text-center py-3">
+                      ไม่มีการแจ้งเตือน
+                    </p>
+                  ) : (
+                    <ul className="max-h-72 overflow-y-auto divide-y divide-gray-100">
+                      {alerts.map((a) => (
+                        <li
+                          key={a.id}
+                          className={`p-2 text-sm ${
+                            a.is_read
+                              ? "text-gray-500 bg-white"
+                              : "bg-[#E8F6F3] text-gray-800"
+                          }`}
+                        >
+                          <div className="font-medium">{a.message}</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {dayjs(a.created_at).format("DD MMM YYYY HH:mm")}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* 👤 โปรไฟล์ (desktop) */}
           <div className="relative" ref={dropdownRef}>
@@ -310,32 +323,38 @@ export default function Nav() {
               className="w-9 h-9 flex items-center justify-center rounded-full border border-[#00C6A7]/40 bg-white/60 backdrop-blur-md text-gray-800 hover:bg-white transition-all"
             >
               {user?.avatar ? (
-                <img src={user.avatar} alt="avatar" className="w-full h-full rounded-full object-cover" />
+                <img
+                  src={user.avatar}
+                  alt="avatar"
+                  className="w-full h-full rounded-full object-cover"
+                />
               ) : (
                 <User size={18} />
               )}
             </button>
 
             {dropdownOpen && (
-  <div className="absolute right-0 top-full mt-2 w-52 rounded-lg bg-white/95 backdrop-blur-lg shadow-lg border border-gray-200 p-3 space-y-2 animate-slideDown z-50">
-    <div className="text-center border-b border-gray-200 pb-2">
-      <p className="text-xs text-gray-600 truncate">{user?.email}</p>
-    </div>
-    <Link
-      href="/dashboard/profile"
-      onClick={() => setDropdownOpen(false)}
-      className="flex items-center gap-2 text-gray-600 hover:text-[#007BFF] text-sm transition-all"
-    >
-      <Settings size={16} /> แก้ไขข้อมูลส่วนตัว
-    </Link>
-    <button
-      onClick={signOut}
-      className="flex items-center gap-2 text-red-500 hover:text-red-600 text-sm transition-all"
-    >
-      <LogOut size={16} /> ออกจากระบบ
-    </button>
-  </div>
-)}
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-lg bg-white/95 backdrop-blur-lg shadow-lg border border-gray-200 p-3 space-y-2 animate-slideDown z-50">
+                <div className="text-center border-b border-gray-200 pb-2">
+                  <p className="text-xs text-gray-600 truncate">
+                    {user?.email}
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2 text-gray-600 hover:text-[#007BFF] text-sm transition-all"
+                >
+                  <Settings size={16} /> แก้ไขข้อมูลส่วนตัว
+                </Link>
+                <button
+                  onClick={signOut}
+                  className="flex items-center gap-2 text-red-500 hover:text-red-600 text-sm transition-all"
+                >
+                  <LogOut size={16} /> ออกจากระบบ
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -344,20 +363,24 @@ export default function Nav() {
       {menuOpen && (
         <div className="md:hidden absolute top-full left-0 w-full bg-white/80 backdrop-blur-xl border-t border-white/40 z-40 animate-slideDown">
           <div className="flex flex-col px-4 py-3 space-y-2">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setMenuOpen(false)}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-                  pathname === l.href
-                    ? "bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-white"
-                    : "text-[#007BFF] hover:text-[#00C6A7]"
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
+            {links
+              .filter(
+                (l) => !(l.href === "/dashboard/admin" && user?.role_id !== 3)
+              ) // ✅ ซ่อน Admin ถ้าไม่ใช่ role_id=3
+              .map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                    pathname === l.href
+                      ? "bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-white"
+                      : "text-[#007BFF] hover:text-[#00C6A7]"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              ))}
           </div>
         </div>
       )}
