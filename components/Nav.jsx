@@ -19,6 +19,8 @@ export default function Nav() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -28,12 +30,59 @@ export default function Nav() {
   const dropdownRef = useRef(null);
   const notifRef = useRef(null);
 
+  // ✅ โหลดการแจ้งเตือน
+  useEffect(() => {
+    async function fetchAlerts() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
+      const { data, error } = await supabase
+        .from("alerts")
+        .select("*")
+        .eq("patient_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("❌ Fetch alerts error:", error.message);
+      } else {
+        setAlerts(data || []);
+        const unread = data.filter((a) => !a.is_read).length;
+        setUnreadCount(unread);
+      }
+    }
+    fetchAlerts();
+  }, []);
+
   // ✅ เพิ่มเงาเมื่อ scroll
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel("realtime:alerts")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "alerts",
+          filter: `patient_id=eq.${userId}`,
+        },
+        (payload) => {
+          setAlerts((prev) => [payload.new, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   // ✅ ปิด dropdown เมื่อคลิกข้างนอก
   useEffect(() => {
@@ -160,7 +209,7 @@ export default function Nav() {
                           className={`p-2 text-sm ${
                             a.is_read
                               ? "text-gray-500 bg-white"
-                              : "bg-[#E8F6F3] text-gray-800"
+                              : " text-gray-800"
                           }`}
                         >
                           <div className="font-medium">{a.message}</div>
@@ -172,6 +221,20 @@ export default function Nav() {
                     </ul>
                   )}
                 </div>
+                {/* ปุ่มไปหน้าแจ้งเตือนทั้งหมด */}
+                {alerts.length > 0 && (
+                  <div className="border-t border-gray-200 text-center py-2">
+                    <button
+                      onClick={() => {
+                        setNotifOpen(false);
+                        router.push("/dashboard/notifications");
+                      }}
+                      className="text-sm text-[#007BFF] hover:text-[#00C6A7] font-medium"
+                    >
+                      🔎 ดูการแจ้งเตือนทั้งหมด
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -297,7 +360,7 @@ export default function Nav() {
                           className={`p-2 text-sm ${
                             a.is_read
                               ? "text-gray-500 bg-white"
-                              : "bg-[#E8F6F3] text-gray-800"
+                              : " text-gray-800"
                           }`}
                         >
                           <div className="font-medium">{a.message}</div>
@@ -309,6 +372,20 @@ export default function Nav() {
                     </ul>
                   )}
                 </div>
+                {/* ปุ่มไปหน้าแจ้งเตือนทั้งหมด */}
+                {alerts.length > 0 && (
+                  <div className="border-t border-gray-200 text-center py-2">
+                    <button
+                      onClick={() => {
+                        setNotifOpen(false);
+                        router.push("/dashboard/notifications");
+                      }}
+                      className="text-sm text-[#007BFF] hover:text-[#00C6A7] font-medium"
+                    >
+                      🔎 ดูการแจ้งเตือนทั้งหมด
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

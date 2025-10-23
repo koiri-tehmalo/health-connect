@@ -70,6 +70,7 @@ export default function DashboardHome() {
         .gte("appt_time", today)
         .lte("appt_time", threeDaysLater)
         .order("appt_time", { ascending: true })
+        .neq("status", "cancelled")
         .limit(3);
 
       if (error) console.error("โหลดนัดหมายผิดพลาด:", error.message);
