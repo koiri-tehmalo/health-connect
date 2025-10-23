@@ -215,30 +215,37 @@ export default function DashboardHome() {
             🩺 ยังไม่มีข้อมูลใบสั่งยาจากแพทย์
           </p>
         ) : (
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 border">วันที่สั่ง</th>
-                <th className="p-2 border">ชื่อยา</th>
-                <th className="p-2 border">ขนาดยา</th>
-                <th className="p-2 border">คำแนะนำ</th>
-                <th className="p-2 border">แพทย์ผู้สั่ง</th>
-              </tr>
-            </thead>
-            <tbody>
-              {prescriptions.map((p) => (
-                <tr key={p.id}>
-                  <td className="p-2 border">
-                    {dayjs(p.prescribed_at).format("DD/MM/YYYY")}
-                  </td>
-                  <td className="p-2 border">{p.medication_name}</td>
-                  <td className="p-2 border">{p.dosage}</td>
-                  <td className="p-2 border">{p.instructions || "-"}</td>
-                  <td className="p-2 border">{p.doctors?.full_name || "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-hidden rounded-xl border">
+            {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+            <div className="overflow-x-auto">
+              <table className="w-full border text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 border">วันที่สั่ง</th>
+                    <th className="p-2 border">ชื่อยา</th>
+                    <th className="p-2 border">ขนาดยา</th>
+                    <th className="p-2 border">คำแนะนำ</th>
+                    <th className="p-2 border">แพทย์ผู้สั่ง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prescriptions.map((p) => (
+                    <tr key={p.id}>
+                      <td className="p-2 border">
+                        {dayjs(p.prescribed_at).format("DD/MM/YYYY")}
+                      </td>
+                      <td className="p-2 border">{p.medication_name}</td>
+                      <td className="p-2 border">{p.dosage}</td>
+                      <td className="p-2 border">{p.instructions || "-"}</td>
+                      <td className="p-2 border">
+                        {p.doctors?.full_name || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
       {/* ✅ นัดหมายภายใน 3 วัน */}
@@ -253,30 +260,37 @@ export default function DashboardHome() {
             📭 ยังไม่มีนัดหมายภายใน 3 วันข้างหน้า
           </p>
         ) : (
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2 border">วันที่</th>
-                <th className="p-2 border">เวลา</th>
-                <th className="p-2 border">แพทย์</th>
-                <th className="p-2 border">หมายเหตุ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((a) => (
-                <tr key={a.id}>
-                  <td className="p-2 border">
-                    {dayjs(a.appointment_time).format("DD/MM/YYYY")}
-                  </td>
-                  <td className="p-2 border">
-                    {dayjs(a.appointment_time).format("HH:mm")}
-                  </td>
-                  <td className="p-2 border">{a.doctors?.full_name || "-"}</td>
-                  <td className="p-2 border">{a.notes || "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="overflow-hidden rounded-xl border">
+            {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+            <div className="overflow-x-auto">
+              <table className="w-full border text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 border">วันที่</th>
+                    <th className="p-2 border">เวลา</th>
+                    <th className="p-2 border">แพทย์</th>
+                    <th className="p-2 border">หมายเหตุ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {appointments.map((a) => (
+                    <tr key={a.id}>
+                      <td className="p-2 border">
+                        {dayjs(a.appointment_time).format("DD/MM/YYYY")}
+                      </td>
+                      <td className="p-2 border">
+                        {dayjs(a.appointment_time).format("HH:mm")}
+                      </td>
+                      <td className="p-2 border">
+                        {a.doctors?.full_name || "-"}
+                      </td>
+                      <td className="p-2 border">{a.notes || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
       {/* ✅ ค่าเฉลี่ย */}{" "}

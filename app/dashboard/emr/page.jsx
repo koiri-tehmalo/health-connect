@@ -188,63 +188,68 @@ export default function EMRPage() {
       ) : !records || records.length === 0 ? (
         <div className="text-gray-500">ไม่มีข้อมูลเวชระเบียน</div>
       ) : (
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 border">วันที่</th>
-              <th className="p-2 border">ผู้ป่วย</th>
-              <th className="p-2 border">แพทย์</th>
-              <th className="p-2 border">การวินิจฉัย</th>
-              <th className="p-2 border">หมายเหตุ</th>
-              <th className="p-2 border">ไฟล์แนบ</th>
-              {userRole === 2 && <th className="p-2 border">จัดการ</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((r) => (
-              <tr key={r.id}>
-                <td className="p-2 border">
-                  {dayjs(r.visit_date).format("YYYY-MM-DD HH:mm")}
-                </td>
-                <td className="p-2 border">
-                  {r.patients?.full_name || r.patient_id?.slice(0, 8)}
-                </td>
-                <td className="p-2 border">
-                  {r.doctors?.full_name || r.doctor_id?.slice(0, 8)}
-                </td>
-                <td className="p-2 border">{r.diagnosis}</td>
-                <td className="p-2 border">{r.notes || "-"}</td>
-                <td className="p-2 border">
-                  {r.attachments?.length
-                    ? r.attachments.map((f) => (
-                        <a
-                          key={f}
-                          href={`https://rqgsuyrchstpfnjygsmf.supabase.co/storage/v1/object/public/emr-files/${f}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 underline block"
+        <div className="overflow-hidden rounded-xl border">
+          {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+          <div className="overflow-x-auto">
+            <table className="w-full border text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">วันที่</th>
+                  <th className="p-2 border">ผู้ป่วย</th>
+                  <th className="p-2 border">แพทย์</th>
+                  <th className="p-2 border">การวินิจฉัย</th>
+                  <th className="p-2 border">หมายเหตุ</th>
+                  <th className="p-2 border">ไฟล์แนบ</th>
+                  {userRole === 2 && <th className="p-2 border">จัดการ</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {records.map((r) => (
+                  <tr key={r.id}>
+                    <td className="p-2 border">
+                      {dayjs(r.visit_date).format("YYYY-MM-DD HH:mm")}
+                    </td>
+                    <td className="p-2 border">
+                      {r.patients?.full_name || r.patient_id?.slice(0, 8)}
+                    </td>
+                    <td className="p-2 border">
+                      {r.doctors?.full_name || r.doctor_id?.slice(0, 8)}
+                    </td>
+                    <td className="p-2 border">{r.diagnosis}</td>
+                    <td className="p-2 border">{r.notes || "-"}</td>
+                    <td className="p-2 border">
+                      {r.attachments?.length
+                        ? r.attachments.map((f) => (
+                            <a
+                              key={f}
+                              href={`https://rqgsuyrchstpfnjygsmf.supabase.co/storage/v1/object/public/emr-files/${f}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 underline block"
+                            >
+                              {f.split("/").pop()}
+                            </a>
+                          ))
+                        : "-"}
+                    </td>
+                    {userRole === 2 && (
+                      <td className="p-2 border text-center">
+                        <button
+                          onClick={() =>
+                            (window.location.href = `/dashboard/prescriptions?patient_id=${r.patient_id}`)
+                          }
+                          className="btn btn-primary text-xs px-3 py-1"
                         >
-                          {f.split("/").pop()}
-                        </a>
-                      ))
-                    : "-"}
-                </td>
-                {userRole === 2 && (
-                  <td className="p-2 border text-center">
-                    <button
-                      onClick={() =>
-                        (window.location.href = `/dashboard/prescriptions?patient_id=${r.patient_id}`)
-                      }
-                      className="btn btn-primary text-xs px-3 py-1"
-                    >
-                      💊 สร้างใบสั่งยา
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                          💊 สร้างใบสั่งยา
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );
