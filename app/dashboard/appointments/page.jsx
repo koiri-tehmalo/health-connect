@@ -92,29 +92,34 @@ export default function AppointmentsPage() {
       ) : appointments.length === 0 ? (
         <div className="text-gray-500">ยังไม่มีนัดหมาย</div>
       ) : (
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 border">วันเวลา</th>
-              <th className="p-2 border">แพทย์</th>
-              <th className="p-2 border">ผู้ป่วย</th> {/* ✅ เพิ่ม */}
-              <th className="p-2 border">สถานะ</th>
-              <th className="p-2 border">หมายเหตุ</th>
-              <th className="p-2 border">ตอบรับ</th>
-              <th className="p-2 border">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {appointments.map((a) => (
-              <AppointmentRow
-                key={a.id}
-                appointment={a}
-                userRole={userRole}
-                onChange={fetchAppointments}
-              />
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-hidden rounded-xl border">
+          {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+          <div className="overflow-x-auto">
+            <table className="w-full border text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">วันเวลา</th>
+                  <th className="p-2 border">แพทย์</th>
+                  <th className="p-2 border">ผู้ป่วย</th> {/* ✅ เพิ่ม */}
+                  <th className="p-2 border">สถานะ</th>
+                  <th className="p-2 border">หมายเหตุ</th>
+                  <th className="p-2 border">ตอบรับ</th>
+                  <th className="p-2 border">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {appointments.map((a) => (
+                  <AppointmentRow
+                    key={a.id}
+                    appointment={a}
+                    userRole={userRole}
+                    onChange={fetchAppointments}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

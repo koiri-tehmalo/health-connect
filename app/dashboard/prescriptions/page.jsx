@@ -171,52 +171,57 @@ export default function PrescriptionsPage() {
           🩺 ไม่มีข้อมูลใบสั่งยาของคุณ
         </div>
       ) : (
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 border">วันที่สั่งยา</th>
-              <th className="p-2 border">ผู้ป่วย</th>
-              <th className="p-2 border">แพทย์</th>
-              <th className="p-2 border">ชื่อยา</th>
-              <th className="p-2 border">ปริมาณ</th>
-              <th className="p-2 border">คำแนะนำ</th>
-              <th className="p-2 border">ไฟล์แนบ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {prescriptions.map((p) => (
-              <tr key={p.id}>
-                <td className="p-2 border">
-                  {dayjs(p.prescribed_at).format("YYYY-MM-DD HH:mm")}
-                </td>
-                <td className="p-2 border">
-                  {p.patients?.full_name || p.patient_id?.slice(0, 8)}
-                </td>
-                <td className="p-2 border">
-                  {p.doctors?.full_name || p.doctor_id?.slice(0, 8)}
-                </td>
-                <td className="p-2 border">{p.medication_name}</td>
-                <td className="p-2 border">{p.dosage}</td>
-                <td className="p-2 border">{p.instructions || "-"}</td>
-                <td className="p-2 border">
-                  {p.attachments?.length
-                    ? p.attachments.map((f) => (
-                        <a
-                          key={f}
-                          href={`https://rqgsuyrchstpfnjygsmf.supabase.co/storage/v1/object/public/prescription-files/${f}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-blue-600 underline block"
-                        >
-                          {f.split("/").pop()}
-                        </a>
-                      ))
-                    : "-"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-hidden rounded-xl border">
+          {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+          <div className="overflow-x-auto">
+            <table className="w-full border text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">วันที่สั่งยา</th>
+                  <th className="p-2 border">ผู้ป่วย</th>
+                  <th className="p-2 border">แพทย์</th>
+                  <th className="p-2 border">ชื่อยา</th>
+                  <th className="p-2 border">ปริมาณ</th>
+                  <th className="p-2 border">คำแนะนำ</th>
+                  <th className="p-2 border">ไฟล์แนบ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prescriptions.map((p) => (
+                  <tr key={p.id}>
+                    <td className="p-2 border">
+                      {dayjs(p.prescribed_at).format("YYYY-MM-DD HH:mm")}
+                    </td>
+                    <td className="p-2 border">
+                      {p.patients?.full_name || p.patient_id?.slice(0, 8)}
+                    </td>
+                    <td className="p-2 border">
+                      {p.doctors?.full_name || p.doctor_id?.slice(0, 8)}
+                    </td>
+                    <td className="p-2 border">{p.medication_name}</td>
+                    <td className="p-2 border">{p.dosage}</td>
+                    <td className="p-2 border">{p.instructions || "-"}</td>
+                    <td className="p-2 border">
+                      {p.attachments?.length
+                        ? p.attachments.map((f) => (
+                            <a
+                              key={f}
+                              href={`https://rqgsuyrchstpfnjygsmf.supabase.co/storage/v1/object/public/prescription-files/${f}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-600 underline block"
+                            >
+                              {f.split("/").pop()}
+                            </a>
+                          ))
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

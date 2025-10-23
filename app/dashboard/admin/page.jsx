@@ -33,7 +33,9 @@ export default function AdminPage() {
         .from("users")
         .select("id", { count: "exact", head: true })
         .eq("role_id", 2),
-      supabase.from("appointments").select("id", { count: "exact", head: true }),
+      supabase
+        .from("appointments")
+        .select("id", { count: "exact", head: true }),
       supabase.from("hospitals").select("id", { count: "exact", head: true }),
     ]);
 
@@ -233,58 +235,63 @@ function HospitalsTable() {
       </form>
 
       {/* ตารางโรงพยาบาล */}
-      <table className="w-full border text-sm">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">ชื่อโรงพยาบาล</th>
-            <th className="p-2 border text-center">จำนวนหมอ</th>
-            <th className="p-2 border">รายชื่อหมอ</th>
-            <th className="p-2 border">ที่อยู่</th>
-            <th className="p-2 border text-center">จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {list.map((h) => (
-            <tr key={h.id}>
-              <td className="border p-2">{h.name}</td>
-              <td className="border p-2 text-center">{h.doctorCount}</td>
-              <td className="border p-2">
-                {h.doctorNames.length > 0
-                  ? h.doctorNames.join(", ")
-                  : "— ไม่มีหมอ —"}
-              </td>
-              <td className="border p-2">{h.address || "-"}</td>
-              <td className="border p-2 text-center space-x-2">
-                <button
-                  onClick={() => openAssign(h)}
-                  className="btn border text-xs px-2 py-1 text-blue-600"
-                >
-                  🧑‍⚕️ เลือกหมอ
-                </button>
-                <button
-                  onClick={() => openEdit(h)}
-                  className="btn border text-xs px-2 py-1"
-                >
-                  ✏️ แก้ไข
-                </button>
-                <button
-                  onClick={() => deleteHospital(h.id)}
-                  className="btn border text-xs px-2 py-1 text-red-600"
-                >
-                  🗑️ ลบ
-                </button>
-              </td>
-            </tr>
-          ))}
-          {list.length === 0 && (
-            <tr>
-              <td colSpan="5" className="text-center p-3 text-gray-500">
-                ไม่มีข้อมูลโรงพยาบาล
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+      <div className="overflow-hidden rounded-xl border">
+        {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+        <div className="overflow-x-auto">
+          <table className="w-full border text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-2 border">ชื่อโรงพยาบาล</th>
+                <th className="p-2 border text-center">จำนวนหมอ</th>
+                <th className="p-2 border">รายชื่อหมอ</th>
+                <th className="p-2 border">ที่อยู่</th>
+                <th className="p-2 border text-center">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((h) => (
+                <tr key={h.id}>
+                  <td className="border p-2">{h.name}</td>
+                  <td className="border p-2 text-center">{h.doctorCount}</td>
+                  <td className="border p-2">
+                    {h.doctorNames.length > 0
+                      ? h.doctorNames.join(", ")
+                      : "— ไม่มีหมอ —"}
+                  </td>
+                  <td className="border p-2">{h.address || "-"}</td>
+                  <td className="border p-2 text-center space-x-2">
+                    <button
+                      onClick={() => openAssign(h)}
+                      className="btn border text-xs px-2 py-1 text-blue-600"
+                    >
+                      🧑‍⚕️ เลือกหมอ
+                    </button>
+                    <button
+                      onClick={() => openEdit(h)}
+                      className="btn border text-xs px-2 py-1"
+                    >
+                      ✏️ แก้ไข
+                    </button>
+                    <button
+                      onClick={() => deleteHospital(h.id)}
+                      className="btn border text-xs px-2 py-1 text-red-600"
+                    >
+                      🗑️ ลบ
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {list.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="text-center p-3 text-gray-500">
+                    ไม่มีข้อมูลโรงพยาบาล
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* ✅ Modal แก้ไข */}
       {editingHospital && (
@@ -293,9 +300,7 @@ function HospitalsTable() {
             onSubmit={saveEdit}
             className="bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md space-y-3 relative z-60"
           >
-            <h3 className="text-xl font-semibold mb-2">
-              แก้ไขข้อมูลโรงพยาบาล
-            </h3>
+            <h3 className="text-xl font-semibold mb-2">แก้ไขข้อมูลโรงพยาบาล</h3>
 
             <div>
               <label className="label">ชื่อโรงพยาบาล</label>
@@ -380,7 +385,6 @@ function HospitalsTable() {
     </div>
   );
 }
-
 
 /* ============================================================
    👥 ตารางผู้ใช้
@@ -473,41 +477,49 @@ function UsersTable() {
       {loading ? (
         <div>⏳ กำลังโหลด...</div>
       ) : (
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 border">ชื่อ</th>
-              <th className="p-2 border">อีเมล</th>
-              <th className="p-2 border">เบอร์โทร</th>
-              <th className="p-2 border">Role</th>
-              <th className="p-2 border">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td className="border p-2">{u.full_name}</td>
-                <td className="border p-2">{u.email}</td>
-                <td className="border p-2">{u.phone || "-"}</td>
-                <td className="border p-2">{roleLabel(u.role_id)}</td>
-                <td className="border p-2 text-center space-x-1">
-                  <button
-                    onClick={() => openEdit(u)}
-                    className="btn border text-xs px-3 py-1"
-                  >
-                    ✏️ แก้ไข
-                  </button>
-                  <button
-                    onClick={() => handleDelete(u.id)}
-                    className="btn border text-xs px-3 py-1 text-red-600"
-                  >
-                    🗑️ ลบ
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-hidden rounded-xl border">
+          {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+          <div className="overflow-x-auto">
+            {/* จำกัดความสูงการ์ด และให้สกอร์ลล์แนวตั้ง */}
+            <div className="max-h-[75vh] overflow-y-auto">
+              <table className="w-full border text-sm">
+                <thead className="sticky top-0 z-20 bg-gray-100">
+                  <tr>
+                    <th className="p-2 border">ชื่อ</th>
+                    <th className="p-2 border">อีเมล</th>
+                    <th className="p-2 border">เบอร์โทร</th>
+                    <th className="p-2 border">Role</th>
+                    <th className="p-2 border">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id}>
+                      <td className="border p-2">{u.full_name}</td>
+                      <td className="border p-2">{u.email}</td>
+                      <td className="border p-2">{u.phone || "-"}</td>
+                      <td className="border p-2">{roleLabel(u.role_id)}</td>
+                      <td className="border p-2 text-center space-x-1">
+                        <button
+                          onClick={() => openEdit(u)}
+                          className="btn border text-xs px-3 py-1"
+                        >
+                          ✏️ แก้ไข
+                        </button>
+                        <button
+                          onClick={() => handleDelete(u.id)}
+                          className="btn border text-xs px-3 py-1 text-red-600"
+                        >
+                          🗑️ ลบ
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       )}
 
       {editingUser && (

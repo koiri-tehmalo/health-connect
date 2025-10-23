@@ -232,92 +232,97 @@ export default function HealthTrackingPage() {
         <h2 className="text-lg font-semibold mb-3">
           📈 ประวัติการติดตามสุขภาพ
         </h2>
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 border">วันที่</th>
-              <th className="p-2 border">ชีพจร</th>
-              <th className="p-2 border">ความดัน (บน/ล่าง)</th>
-              <th className="p-2 border">อุณหภูมิ</th>
-              <th className="p-2 border">SpO₂</th>
-              <th className="p-2 border">ก้าว</th>
-              <th className="p-2 border">ผลการวิเคราะห์</th>
-              <th className="p-2 border text-center">รายละเอียด</th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((r) => (
-              <tr key={r.id}>
-                <td className="border p-2">
-                  {dayjs(r.created_at).format("DD/MM/YYYY HH:mm")}
-                </td>
-                <td
-                  className={`border p-2 text-center ${
-                    isAbnormal("pulse", r.pulse, r)
-                      ? "text-red-600 font-bold"
-                      : ""
-                  }`}
-                >
-                  {r.pulse}
-                </td>
-                <td
-                  className={`border p-2 text-center ${
-                    isAbnormal("systolic", r.systolic, r)
-                      ? "text-red-600 font-bold"
-                      : ""
-                  }`}
-                >
-                  {r.systolic}/{r.diastolic}
-                </td>
-                <td
-                  className={`border p-2 text-center ${
-                    isAbnormal("temperature", r.temperature, r)
-                      ? "text-red-600 font-bold"
-                      : ""
-                  }`}
-                >
-                  {r.temperature}
-                </td>
-                <td
-                  className={`border p-2 text-center ${
-                    isAbnormal("spo2", r.spo2, r)
-                      ? "text-red-600 font-bold"
-                      : ""
-                  }`}
-                >
-                  {r.spo2}
-                </td>
-                <td className="border p-2 text-center">{r.steps}</td>
-                <td
-                  className={`border p-2 text-center font-semibold ${
-                    r.summary?.includes("✅")
-                      ? "text-green-600"
-                      : r.summary?.includes("⚠️")
-                      ? "text-yellow-500"
-                      : "text-red-600"
-                  }`}
-                >
-                  {r.summary || "-"}
-                </td>
-                <td className="border p-2 text-center">
-                  <button
-                    onClick={() => setSelectedRecord(r)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    🔍 ดู
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {records.length === 0 && (
-              <tr>
-                <td colSpan="8" className="text-center p-3 text-gray-500">
-                  ไม่มีข้อมูลสุขภาพ
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="overflow-hidden rounded-xl border">
+          {/* สกอร์ลล์แนวนอนเมื่อจอแคบ */}
+          <div className="overflow-x-auto">
+            <table className="w-full border text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 border">วันที่</th>
+                  <th className="p-2 border">ชีพจร</th>
+                  <th className="p-2 border">ความดัน (บน/ล่าง)</th>
+                  <th className="p-2 border">อุณหภูมิ</th>
+                  <th className="p-2 border">SpO₂</th>
+                  <th className="p-2 border">ก้าว</th>
+                  <th className="p-2 border">ผลการวิเคราะห์</th>
+                  <th className="p-2 border text-center">รายละเอียด</th>
+                </tr>
+              </thead>
+              <tbody>
+                {records.map((r) => (
+                  <tr key={r.id}>
+                    <td className="border p-2">
+                      {dayjs(r.created_at).format("DD/MM/YYYY HH:mm")}
+                    </td>
+                    <td
+                      className={`border p-2 text-center ${
+                        isAbnormal("pulse", r.pulse, r)
+                          ? "text-red-600 font-bold"
+                          : ""
+                      }`}
+                    >
+                      {r.pulse}
+                    </td>
+                    <td
+                      className={`border p-2 text-center ${
+                        isAbnormal("systolic", r.systolic, r)
+                          ? "text-red-600 font-bold"
+                          : ""
+                      }`}
+                    >
+                      {r.systolic}/{r.diastolic}
+                    </td>
+                    <td
+                      className={`border p-2 text-center ${
+                        isAbnormal("temperature", r.temperature, r)
+                          ? "text-red-600 font-bold"
+                          : ""
+                      }`}
+                    >
+                      {r.temperature}
+                    </td>
+                    <td
+                      className={`border p-2 text-center ${
+                        isAbnormal("spo2", r.spo2, r)
+                          ? "text-red-600 font-bold"
+                          : ""
+                      }`}
+                    >
+                      {r.spo2}
+                    </td>
+                    <td className="border p-2 text-center">{r.steps}</td>
+                    <td
+                      className={`border p-2 text-center font-semibold ${
+                        r.summary?.includes("✅")
+                          ? "text-green-600"
+                          : r.summary?.includes("⚠️")
+                          ? "text-yellow-500"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {r.summary || "-"}
+                    </td>
+                    <td className="border p-2 text-center">
+                      <button
+                        onClick={() => setSelectedRecord(r)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        🔍 ดู
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {records.length === 0 && (
+                  <tr>
+                    <td colSpan="8" className="text-center p-3 text-gray-500">
+                      ไม่มีข้อมูลสุขภาพ
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* ✅ Modal แสดงรายละเอียด */}
