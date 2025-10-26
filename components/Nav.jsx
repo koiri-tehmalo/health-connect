@@ -31,27 +31,47 @@ export default function Nav() {
   const notifRef = useRef(null);
 
   // ✅ โหลดการแจ้งเตือน
+  const [loadingUser, setLoadingUser] = useState(true); // ✅ เพิ่ม state เช็คโหลดเสร็จหรือยัง
+
   useEffect(() => {
-    async function fetchAlerts() {
+    async function fetchUserAndAlerts() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
-      const { data, error } = await supabase
+      // ✅ โหลดโปรไฟล์พร้อม role_id
+      const { data: profile } = await supabase
+        .from("users")
+        .select("full_name, avatar_url, role_id")
+        .eq("id", user.id)
+        .maybeSingle(); // กันกรณีไม่เจอแถว จะไม่ throw 406
+
+      const userObj = {
+        email: user.email,
+        name: profile?.full_name || "ผู้ใช้ระบบ",
+        avatar: profile?.avatar_url || null,
+        role_id: Number(profile?.role_id) || 1, // แคสต์ให้เป็น number (กัน "3" !== 3)
+        id: user.id,
+      };
+      console.log("User profile:", userObj); // Debug log
+      setUser(userObj);
+
+      // ✅ โหลดการแจ้งเตือนหลังรู้ user.id แล้ว
+      const { data: alerts, error } = await supabase
         .from("alerts")
         .select("*")
         .eq("patient_id", user.id)
         .order("created_at", { ascending: false });
-      if (error) {
-        console.error("❌ Fetch alerts error:", error.message);
-      } else {
-        setAlerts(data || []);
-        const unread = data.filter((a) => !a.is_read).length;
-        setUnreadCount(unread);
+      if (!error) {
+        setAlerts(alerts || []);
+        setUnreadCount(alerts.filter((a) => !a.is_read).length);
       }
+
+      setLoadingUser(false); // ✅ เสร็จแล้ว
     }
-    fetchAlerts();
+
+    fetchUserAndAlerts();
   }, []);
 
   // ✅ เพิ่มเงาเมื่อ scroll
@@ -103,28 +123,6 @@ export default function Nav() {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("touchstart", handleOutsideClick);
     };
-  }, []);
-
-  // ✅ โหลดข้อมูลผู้ใช้
-  useEffect(() => {
-    async function fetchUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: profile } = await supabase
-        .from("users")
-        .select("full_name, avatar_url")
-        .eq("id", user.id)
-        .single();
-      setUser({
-        email: user.email,
-        name: profile?.full_name || "ผู้ใช้ระบบ",
-        avatar: profile?.avatar_url || null,
-        role_id: profile?.role_id || 1, // ✅ เพิ่ม role_id
-      });
-    }
-    fetchUser();
   }, []);
 
   async function signOut() {
@@ -296,23 +294,24 @@ export default function Nav() {
 
         {/* 💻 เมนู Desktop */}
         <div className="hidden md:flex items-center gap-3">
-          {links
-            .filter(
-              (l) => !(l.href === "/dashboard/admin" && user?.role_id !== 3)
-            ) // ✅ ซ่อน Admin ถ้าไม่ใช่ role_id=3
-            .map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-300 ${
-                  pathname === l.href
-                    ? "bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-white shadow-sm"
-                    : "text-[#007BFF] hover:text-[#00C6A7]"
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
+          {!loadingUser &&
+            links
+              .filter(
+                (l) => !(l.href === "/dashboard/admin" && userId?.role_id !== 3)
+              ) // ✅ ซ่อน Admin ถ้าไม่ใช่ role_id=3
+              .map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-300 ${
+                    pathname === l.href
+                      ? "bg-gradient-to-r from-[#007BFF] to-[#00C6A7] text-white shadow-sm"
+                      : "text-[#007BFF] hover:text-[#00C6A7]"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              ))}
 
           {/* 🔔 แจ้งเตือน (desktop) */}
           <div className="relative" ref={notifRef}>

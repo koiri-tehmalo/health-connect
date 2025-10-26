@@ -17,6 +17,8 @@ export default function AdminPage() {
       .select("role_id")
       .eq("id", user.id)
       .single();
+    if (error) console.error("Error fetching role:", error);
+    console.log("User role data:", data); // Debug log
 
     setRole(data?.role_id || null);
   }
