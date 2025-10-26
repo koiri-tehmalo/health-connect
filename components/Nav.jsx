@@ -174,7 +174,7 @@ export default function Nav() {
             >
               <Bell size={18} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="fixed  -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
@@ -182,7 +182,7 @@ export default function Nav() {
 
             {/* กล่องแจ้งเตือนมือถือ */}
             {notifOpen && (
-              <div className="absolute right-0 top-full mt-2 w-72 rounded-xl bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg animate-slideDown z-50">
+              <div className="fixed  right-0 top-full mt-2 w-72 rounded-xl bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg animate-slideDown z-50">
                 <div className="p-4">
                   <div className="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
                     <span className="text-sm font-semibold text-gray-700">
