@@ -55,20 +55,8 @@ export default function EMRPage() {
 
     // ✅ ดึงเวชระเบียนทั้งหมด (join ด้วย foreign key เดิม)
     let query = supabase
-      .from("medical_records")
-      .select(
-        `
-        id,
-        patient_id,
-        doctor_id,
-        visit_date,
-        diagnosis,
-        notes,
-        attachments,
-        patients:patient_id (id, full_name),
-        doctors:doctor_id (id, full_name)
-      `
-      )
+      .from("view_medical_records_with_users")
+      .select("*")
       .order("visit_date", { ascending: false });
 
     if (roleId === 1) query = query.eq("patient_id", user.id);
@@ -210,10 +198,10 @@ export default function EMRPage() {
                       {dayjs(r.visit_date).format("YYYY-MM-DD HH:mm")}
                     </td>
                     <td className="p-2 border">
-                      {r.patients?.full_name || r.patient_id?.slice(0, 8)}
+                      {r.patient_name || r.patient_id?.slice(0, 8)}
                     </td>
                     <td className="p-2 border">
-                      {r.doctors?.full_name || r.doctor_id?.slice(0, 8)}
+                      {r.doctor_name || r.doctor_id?.slice(0, 8)}
                     </td>
                     <td className="p-2 border">{r.diagnosis}</td>
                     <td className="p-2 border">{r.notes || "-"}</td>

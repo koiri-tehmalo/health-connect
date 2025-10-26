@@ -41,10 +41,8 @@ export default function PrescriptionsPage() {
 
     // ✅ ดึงใบสั่งยาทั้งหมดตาม role
     let query = supabase
-      .from("prescriptions")
-      .select(
-        "id, patient_id, doctor_id, medication_name, dosage, instructions, attachments, prescribed_at, patients:patient_id(full_name), doctors:doctor_id(full_name)"
-      )
+      .from("view_prescriptions_with_users")
+      .select("*")
       .order("prescribed_at", { ascending: false });
 
     if (roleId === 1) query = query.eq("patient_id", user.id);
@@ -193,10 +191,10 @@ export default function PrescriptionsPage() {
                       {dayjs(p.prescribed_at).format("YYYY-MM-DD HH:mm")}
                     </td>
                     <td className="p-2 border">
-                      {p.patients?.full_name || p.patient_id?.slice(0, 8)}
+                      {p.patient_name || p.patient_id?.slice(0, 8)}
                     </td>
                     <td className="p-2 border">
-                      {p.doctors?.full_name || p.doctor_id?.slice(0, 8)}
+                      {p.doctor_name || p.doctor_id?.slice(0, 8)}
                     </td>
                     <td className="p-2 border">{p.medication_name}</td>
                     <td className="p-2 border">{p.dosage}</td>
