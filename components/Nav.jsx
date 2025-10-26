@@ -297,7 +297,7 @@ export default function Nav() {
           {!loadingUser &&
             links
               .filter(
-                (l) => !(l.href === "/dashboard/admin" && userId?.role_id !== 3)
+                (l) => !(l.href === "/dashboard/admin" && user?.role_id !== 3)
               ) // ✅ ซ่อน Admin ถ้าไม่ใช่ role_id=3
               .map((l) => (
                 <Link
